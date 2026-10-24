@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { HttpStatus, HttpStatusCode } from '#constants/http-status.js';
-
+import { DateUtil } from './date.util.js';
 
 export interface PaginationMeta {
   page: number;
@@ -25,7 +25,7 @@ export class ApiResponse {
       message,
       data,
       meta,
-      timestamp: new Date().toISOString(),
+      timestamp: DateUtil.toUTCISOString(),
     });
   }
 
@@ -57,7 +57,8 @@ export class ApiResponse {
       errorCode,
       errors,
       stack,
-      timestamp: new Date().toISOString(),
+      timestamp: DateUtil.toUTCISOString(),
     });
   }
 }
+

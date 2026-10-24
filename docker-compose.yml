@@ -11,8 +11,10 @@ services:
       - "4000:4000"
     environment:
       - NODE_ENV=production
+      - TZ=UTC
       - PORT=4000
       - HOST=0.0.0.0
+
       - MONGO_URI=mongodb://mongo:27017/ad_e_com
       - REDIS_ENABLED=true
       - REDIS_HOST=redis

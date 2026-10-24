@@ -29,8 +29,10 @@ WORKDIR /app
 
 # Set production environment
 ENV NODE_ENV=production
+ENV TZ=UTC
 ENV PORT=4000
 ENV HOST=0.0.0.0
+
 
 # Create a non-root user and group
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

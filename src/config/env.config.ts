@@ -3,9 +3,14 @@ import { z } from 'zod';
 
 dotenv.config();
 
+// Enforce UTC timezone globally across the entire Node.js runtime process
+process.env.TZ = process.env.TZ || 'UTC';
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  TZ: z.string().default('UTC'),
   PORT: z.coerce.number().default(4000),
+
   HOST: z.string().default('0.0.0.0'),
   APP_NAME: z.string().default('ad-e-com-backend'),
   API_PREFIX: z.string().default('/api/v1'),
