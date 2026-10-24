@@ -1,3 +1,28 @@
-.idea/
-.env
+# Dependencies
+node_modules/
 /node_modules
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Testing & Coverage
+coverage/
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*

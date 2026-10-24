@@ -1,82 +1,243 @@
-# Express API Structure and Starter Kit
+# Enterprise E-Commerce Backend (3-Tier Layered Architecture)
+
+A production-grade, high-scale RESTful API backend built with **Node.js, Express, TypeScript, MongoDB, and Redis**, implementing a strict **3-Tier Layered Architecture** (Controllers → Services → Repositories).
 
 ---
 
-This project is created to provide a structured and scalable starting point for building RESTful APIs using Express.js. It follows modern JavaScript (ES6+) standards and includes essential middleware and utilities for common API features like authentication, file handling, database integration, and more.
+## 🏗 Architecture Overview
 
-## Features
-
-- Organized project structure for easy scalability
-- Environment variable support via `.env`
-- MongoDB integration using Mongoose
-- Asynchronous route error handling
-- File upload support
-- CORS enabled
-- Secure password hashing with bcrypt
-- Date handling with dayjs
-
-## Technologies Used
-
-- **Node.js**
-- **Express.js**
-- **MongoDB / Mongoose**
-- **JavaScript (ES6)**
-
-## Installed Packages
-
-- [`express`](https://www.npmjs.com/package/express) – Web framework for building API endpoints
-- [`mongoose`](https://www.npmjs.com/package/mongoose) – MongoDB ODM for schema-based data modeling
-- [`bcrypt`](https://www.npmjs.com/package/bcrypt) – Password hashing
-- [`dotenv`](https://www.npmjs.com/package/dotenv) – Loads environment variables from `.env` file
-- [`cors`](https://www.npmjs.com/package/cors) – Enables CORS for API access
-- [`body-parser`](https://www.npmjs.com/package/body-parser) – Middleware to parse incoming request bodies
-- [`dayjs`](https://www.npmjs.com/package/dayjs) – Lightweight date library
-- [`express-async-handler`](https://www.npmjs.com/package/express-async-handler) – Middleware to handle async errors
-- [`express-fileupload`](https://www.npmjs.com/package/express-fileupload) – Simple file upload middleware
-
-## Dev Dependencies
-This project includes several developer tools to enhance code quality, enforce consistency, and streamline development.
-
-### Linting & Code Quality
-- **eslint** – Linting tool to enforce coding standards and catch errors early.
-- **@eslint/eslintrc** – Provides compatibility for ESLint config files, especially useful for shared or legacy configs.
-- **lint-staged** – Runs linters (like ESLint) only on staged Git files, improving performance during commits.
-
-### Git Hooks
-- **husky** – Enables Git hooks (e.g., pre-commit, pre-push) to run checks or scripts automatically.
-   - Used with `lint-staged` to prevent committing code that doesn't meet linting standards.
-
-### Development Workflow
-- **nodemon** – Automatically restarts the server when file changes are detected, speeding up development.
-- **migrate-mongo** – Handles versioned MongoDB migrations for database schema and data updates.
-   - Useful for maintaining consistent DB structure across development, staging, and production.
-
-These tools together help ensure high-quality, maintainable, and consistent code while making the development process faster and more efficient.
-
-## API Documentation
-
-This project includes comprehensive API documentation using **Swagger** and **Stoplight Elements**.
-
-You can access the documentation in the following formats:
-
-- **JSDoc Format**  
-  API routes are documented inline using JSDoc-style comments, and automatically parsed by Swagger tools.
-
-- **YAML Format**  
-  A `openapi.yaml` file is generated and available for use with Swagger-compatible tools.
-
-- **Stoplight Elements (Interactive UI)**  
-  The `openapi.yaml` file is rendered using [Stoplight Elements](https://github.com/stoplightio/elements), offering a modern and interactive interface to explore and test the API.
-
-### How to generate or update the YAML file
-
-Run the following command to export the Swagger spec from JSDoc comments to a YAML file at project root:
-
-```bash
-npm node swagger.js
+```
+HTTP Request
+     │
+     ▼
+┌────────────────────────────────────────────────────────┐
+│ Middlewares                                            │
+│ • Helmet (Security Headers)                            │
+│ • CORS (Dynamic Whitelist)                             │
+│ • Request ID (`X-Request-Id` Correlation)              │
+│ • Pino HTTP Logger                                     │
+│ • MongoSanitize (NoSQL Injection Defense)              │
+│ • Rate Limiter (Brute-Force & DoS Protection)          │
+│ • Zod DTO Validation                                  │
+│ • JWT Authentication & RBAC                            │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ 1. Controller Layer (HTTP Transport)                   │
+│ • Extracts DTOs, query, and route parameters           │
+│ • Delegates business decisions to Services             │
+│ • Returns standardized `ApiResponse` envelopes        │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ 2. Service Layer (Domain & Business Logic)             │
+│ • Enforces business invariants and workflow logic      │
+│ • Password hashing & JWT access/refresh token rotation │
+│ • Redis caching strategies (`getOrSet`, invalidation)  │
+│ • Throws typed `AppError` subclasses                   │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ 3. Repository Layer (Data Access Abstraction)          │
+│ • Generic `BaseRepository<T>` CRUD & lean pagination   │
+│ • Domain-specific repositories (`UserRepository`)      │
+│ • Mongoose ORM / MongoDB connection pooling            │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│ Centralized Error Handler                              │
+│ • Catches operational `AppError` and system exceptions │
+│ • Normalizes MongoDB, JWT, and Zod errors              │
+│ • Emits uniform JSON error response                    │
+└────────────────────────────────────────────────────────┘
 ```
 
-### Prerequisites
+---
 
-- Node.js (v20+ recommended)
-- MongoDB (local or cloud)
+## 🛠 Tech Stack
+
+| Category | Technology |
+| :--- | :--- |
+| **Language & Runtime** | TypeScript 5.8 (Strict Mode), Node.js (v22+), `tsx` (dev runtime), `tsup` (esbuild bundler) |
+| **Web Framework** | Express 4.21 with typed Request/Response augmentations |
+| **Database & ODM** | MongoDB 7.0 + Mongoose 8 (Connection pooling, auto-reconnect, health pings) |
+| **Caching & In-Memory**| Redis 7.2 (ioredis client with exponential retry strategy and graceful fallback) |
+| **Authentication** | JWT (Short-lived access token + rotating refresh token), bcryptjs |
+| **Security** | Helmet, dynamic CORS, rate-limiting (`express-rate-limit`), NoSQL injection protection (`express-mongo-sanitize`) |
+| **Validation** | Zod (Type inference, schema validation for body, query, and params) |
+| **Logging** | Pino & Pino-HTTP (High-speed structured JSON, request correlation IDs, pino-pretty in dev) |
+| **API Documentation**| OpenAPI 3.0 / Swagger UI (`/api-docs`) |
+| **Testing** | Vitest (unit & integration tests), Supertest |
+| **DevOps** | Multi-stage Dockerfile (Node 22 Alpine, non-root user), Docker Compose, GitHub Actions CI |
+
+---
+
+## 📁 Project Directory Structure
+
+```
+backend/
+├── .github/workflows/ci.yml       # GitHub Actions CI pipeline
+├── tests/                         # Automated test suite (unit & integration)
+│   ├── integration/               # Supertest HTTP integration tests
+│   └── unit/                      # Isolated service unit tests
+├── src/
+│   ├── @types/                    # Express Request & JWT type augmentations
+│   ├── config/                    # Validated configs (Zod env, DB, Redis, CORS, Logger)
+│   ├── constants/                 # HTTP status codes & system constants
+│   ├── docs/                      # Swagger OpenAPI 3.0 configuration
+│   ├── errors/                    # Custom AppError hierarchy (400, 401, 403, 404, 409, 422, 500)
+│   ├── middlewares/               # RequestId, Logger, Auth, RBAC, Validate, RateLimiter, ErrorHandler
+│   ├── modules/                   # 3-Tier Feature Modules
+│   │   ├── auth/                  # Auth Controller, Service, Zod Schemas, Routes
+│   │   ├── health/                # Health, Liveness, and Readiness endpoints
+│   │   └── user/                  # User Controller, Service, Repository, Model, Schemas, Routes
+│   ├── routes/                    # Versioned API Router (`/api/v1/`)
+│   ├── shared/                    # Generic BaseRepository, CacheService, TokenService, ApiResponse
+│   ├── app.ts                     # Express application middleware pipeline setup
+│   └── server.ts                  # Server bootstrap & graceful shutdown hooks (SIGTERM/SIGINT)
+├── Dockerfile                     # Multi-stage production container build
+├── docker-compose.yml             # Local orchestrated stack (API + MongoDB + Redis)
+├── tsconfig.json                  # Strict TypeScript configuration
+└── vitest.config.ts               # Vitest test runner configuration
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- **Node.js** v20+ (v22 recommended)
+- **MongoDB** running locally or in Docker
+- **Redis** (optional; server gracefully operates without cache if disabled)
+
+### 1. Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env
+```
+
+### 2. Run in Development Mode
+
+```bash
+# Starts development server with live reload via tsx
+npm run dev
+```
+
+Server starts on `http://localhost:4000`:
+- **API Base:** `http://localhost:4000/api/v1`
+- **Swagger Docs:** `http://localhost:4000/api-docs`
+- **Health Check:** `http://localhost:4000/healthz`
+- **Readiness Check:** `http://localhost:4000/readyz`
+
+### 3. Run with Docker Compose
+
+Launch the entire stack (API, MongoDB, Redis) in one command:
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+## 🧪 Testing & Code Quality
+
+```bash
+# Run all tests (Vitest)
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate code coverage
+npm run test:coverage
+
+# TypeScript compile-time typecheck
+npm run typecheck
+
+# Production build
+npm run build
+```
+
+---
+
+## 📡 API Endpoints Reference
+
+### Health Endpoints
+| Method | Route | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/healthz` | System health check (MongoDB, Redis, memory, uptime) | No |
+| `GET` | `/livez` | Kubernetes liveness probe | No |
+| `GET` | `/readyz` | Kubernetes readiness probe | No |
+
+### Authentication (`/api/v1/auth`)
+| Method | Route | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/register` | Register new user account | No (Rate-limited) |
+| `POST` | `/api/v1/auth/login` | Login with credentials and receive access & refresh tokens | No (Rate-limited) |
+| `POST` | `/api/v1/auth/refresh` | Rotate tokens using a valid refresh token | No |
+| `GET` | `/api/v1/auth/me` | Get profile of currently logged-in user | Bearer Token |
+
+### Users (`/api/v1/users`)
+| Method | Route | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/users` | List paginated users with optional search/status filters | Admin Only |
+| `GET` | `/api/v1/users/:id` | Get user details by ID | Bearer Token |
+| `PUT` | `/api/v1/users/:id` | Update user profile | Self or Admin |
+| `DELETE` | `/api/v1/users/:id` | Delete user account | Self or Admin |
+
+---
+
+## 🔒 Security & Standard Response Format
+
+All responses follow a consistent envelope:
+
+### Successful Response
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Users retrieved successfully",
+  "data": [ ... ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 42,
+    "totalPages": 5,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  },
+  "timestamp": "2026-10-25T00:00:00.000Z"
+}
+```
+
+### Error Response
+```json
+{
+  "success": false,
+  "statusCode": 422,
+  "message": "Request validation failed",
+  "errorCode": "VALIDATION_ERROR",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Invalid email address"
+    }
+  ],
+  "timestamp": "2026-10-25T00:00:00.000Z"
+}
+```
+
+---
+
+## 🤝 Community & Code of Conduct
+
+Please review our [Code of Conduct](./CODE_OF_CONDUCT.md) before contributing to ensure an open, welcoming, diverse, and harassment-free community environment.
+
