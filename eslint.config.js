@@ -1,5 +1,8 @@
 const eslintConfig = [
     {
+        ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'uploads/**'],
+    },
+    {
         languageOptions: {
             parserOptions: {
                 ecmaVersion: 2021, // same as es2021

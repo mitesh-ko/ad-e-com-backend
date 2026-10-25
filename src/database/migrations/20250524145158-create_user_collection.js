@@ -5,7 +5,7 @@ export default {
      * @returns {Promise<void>}
      */
     async up(db, client) {
-        const collections = await db.listCollections({ name: 'users' }).toArray();
+        const collections = await db.listCollections({name: 'users'}).toArray();
         const validator = {
             $jsonSchema: {
                 bsonType: 'object',
@@ -40,15 +40,15 @@ export default {
         };
 
         if (collections.length === 0) {
-            await db.createCollection('users', { validator });
+            await db.createCollection('users', {validator});
         } else {
-            await db.command({ collMod: 'users', validator });
+            await db.command({collMod: 'users', validator});
         }
 
         // Ensure critical indexes are created
-        await db.collection('users').createIndex({ email: 1 }, { unique: true });
-        await db.collection('users').createIndex({ role: 1 });
-        await db.collection('users').createIndex({ status: 1 });
+        await db.collection('users').createIndex({email: 1}, {unique: true});
+        await db.collection('users').createIndex({role: 1});
+        await db.collection('users').createIndex({status: 1});
     },
 
     /**
@@ -57,6 +57,6 @@ export default {
      * @returns {Promise<void>}
      */
     async down(db, client) {
-        await db.command({ collMod: 'users', validator: {} });
+        await db.command({collMod: 'users', validator: {}});
     }
 };
